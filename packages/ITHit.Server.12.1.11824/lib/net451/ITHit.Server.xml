@@ -1,0 +1,2190 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ITHit.Server</name>
+    </assembly>
+    <members>
+        <member name="T:ITHit.Server.ContextAsync`1">
+            <summary>
+            This class represents an execution context. Holds request, response, and resolves hierarchy items by paths.
+            </summary>
+            <remarks>
+            <para>
+            This class provides the engine with information about currently executing context.
+            It holds request, response and provides item factory method <see cref="M:ITHit.Server.ContextAsync`1.GetHierarchyItemAsync(System.String)"/> to resolve items by path.
+            </para>
+            <para>
+            The library provides a set of context classes derived from this class, that provide constructors 
+            for .NET Core, ASP.NET, HttpLitener and other environments. Typically you will not derive your class directly from this class.
+            Instead, you will derive your class from one of the context classes designed for your environment, such as 
+            <see cref="T:ITHit.Server.ContextCoreAsync`1"/>, <see cref="T:ITHit.Server.ContextWebAsync`1"/>, etc.
+            </para>
+            <para>    
+            When inheriting you must implement the <see cref="M:ITHit.Server.ContextAsync`1.GetHierarchyItemAsync(System.String)"/> method.
+            In this method, you will search for items (files, folders, versions, etc.) in your storage by path provided
+            and return it to the engine.
+            </para>
+            <para>
+            In each HTTP request you will create a separate instance of your class and pass it to <see cref="M:ITHit.Server.EngineAsync`1.RunAsync(ITHit.Server.ContextAsync{`0})"/> method.
+            </para>
+            <para>
+            You can implement your own request and response classes to run the engine in virtually any hosting environment.
+            </para>
+            </remarks>
+            <threadsafety>Instance members of this class are NOT thread-safe.
+             You must create a separate instance of this class for each request.
+            </threadsafety>
+            <typeparam name="THierarchyItemAsync">Type implements <see cref="T:ITHit.Server.IHierarchyItemBaseAsync"/></typeparam>
+        </member>
+        <member name="P:ITHit.Server.ContextAsync`1.Request">
+            <summary>
+            Object representing current request.
+            </summary>
+            <remarks>
+            This may not be necesserily the request that was passed to the constructor because
+            engine may wraps the request and response.
+            </remarks>
+        </member>
+        <member name="P:ITHit.Server.ContextAsync`1.Response">
+            <summary>
+            Object representing current response.
+            </summary>
+            <remarks>
+            This may not be necesserily the response that was passed to the constructor because
+            engine may wrap the request and response.
+            </remarks>
+        </member>
+        <member name="P:ITHit.Server.ContextAsync`1.Exception">
+            <summary>
+            Exception which occurred during request execution.
+            </summary>
+            <remarks>
+            <para>
+            This can be either exception raised by your implementation or exception
+            raised be engine internally. In your <see cref="M:ITHit.Server.ContextAsync`1.BeforeResponseAsync" /> implementation you will use it to see 
+            if processing was successful or not and to commit or rollback a transaction.
+            </para>
+            <para>
+            This exception will be sent to client.
+            </para>
+            </remarks>
+            <!-- No matching elements were found for the following include tag --><include file="..\ITHit.WebDAV.Server\Comments\Generated.xml" path="doc/example[@name=&quot;ContextBaseAsync{THierarchyItemAsync}.BeforeResponseAsync&quot;]/*" />
+        </member>
+        <member name="P:ITHit.Server.ContextAsync`1.Engine">
+            <summary>
+            Instance of Engine which is currently executing the request.
+            </summary>
+        </member>
+        <member name="M:ITHit.Server.ContextAsync`1.#ctor(ITHit.Server.RequestAsync,ITHit.Server.ResponseAsync)">
+            <summary>
+            Initializes a new instance of the context. Initializes <see cref="T:ITHit.Server.RequestAsync"/> and <see cref="T:ITHit.Server.ResponseAsync"/> properties.
+            </summary>
+            <param name="request"><see cref="T:ITHit.Server.RequestAsync"/> implementation.</param>
+            <param name="response"><see cref="T:ITHit.Server.ResponseAsync"/> implementation.</param>
+        </member>
+        <member name="M:ITHit.Server.ContextAsync`1.BeforeResponseAsync">
+            <summary>
+            This method is called right before engine starts writing response.
+            </summary>
+            <remarks>
+            <para>
+            Specifically this method is called when the request is parsed, engine has
+            called all methods which shall change state of an item and is ready to
+            start writing response.
+            </para>
+            <para>
+            However methods of interfaces which read data may also be called after this method.
+            </para>
+            <para>
+            This method can be overriden to either commit or rollback transaction.
+            </para>
+            <para>
+            In your implementation of <see cref="T:ITHit.Server.Extensibility.IMethodHandlerAsync`1" /> you need to call 
+            <see cref="M:ITHit.Server.ContextAsync`1.EnsureBeforeResponseWasCalledAsync" />
+            instead of this method to avoid double execution.
+            </para>
+            </remarks>
+            <!-- No matching elements were found for the following include tag --><include file="..\ITHit.WebDAV.Server\Comments\Generated.xml" path="doc/example[@name=&quot;ContextBaseAsync{THierarchyItemAsync}.BeforeResponseAsync&quot;]/*" />
+        </member>
+        <member name="M:ITHit.Server.ContextAsync`1.EnsureBeforeResponseWasCalledAsync">
+            <summary>
+            Calls <see cref="M:ITHit.Server.ContextAsync`1.BeforeResponseAsync"/> only first time this method is invoked.
+            </summary>
+        </member>
+        <member name="M:ITHit.Server.ContextAsync`1.GetHierarchyItemAsync(System.String)">
+            <summary>
+            Implementation of this abstract method is used by the engine to find hierarchy item objects by path.
+            </summary>
+            <param name="path">
+            Path of the hierarchy item object (file, folder, version, etc.).
+            It is always the full path from the root of the repository.
+            </param>
+            <returns>
+            Hierarchy item object referenced by the specified path or <c>null</c>
+            if hierarchy item not found.
+            </returns>
+            <remarks>
+            <para>
+            When you inherit from the context class, you must override this abstract method.
+            For Class 1 and Class 2 server in this method implementation you will search for file or folder in
+            your storage by path provided and return it to engine. 
+            For G Suite server you will search only for files.
+            For DeltaV server in addition to folder or file item you will return version and history items.
+            </para>
+            </remarks>
+            <!-- No matching elements were found for the following include tag --><include file="..\ITHit.WebDAV.Server\Comments\Generated.xml" path="doc/example[@name=&quot;ContextBaseAsync{THierarchyItemAsync}.GetHierarchyItemAsync&quot;]/*" />
+        </member>
+        <member name="T:ITHit.Server.EngineAsync`1">
+            <summary>
+            Provides common functionality for IT Hit WebDAV Engine and IT Hit G Suite Engine.
+            </summary>
+            <remarks>
+            <para>You will not create this class directly, instead you will create an instance of <see cref="T:ITHit.WebDAV.Server.DavEngineAsync"/> calss or <see cref="T:ITHit.GSuite.Server.GSuiteEngineAsync"/> class. 
+            The Engine parses the request sent by client application, processes requests making calls to your interfaces implementations and generates response.
+            Find more information about creating each Engine type in the <see cref="T:ITHit.WebDAV.Server.DavEngineAsync"/> and <see cref="T:ITHit.GSuite.Server.GSuiteEngineAsync"/> classes description.
+            </para>
+            <para>
+            You must set <see cref="P:ITHit.Server.EngineAsync`1.License"/> property before you can use the Engine.
+            </para>
+            <para>
+            All updates invoked within one request execution shall be inside a single transaction.
+            Transaction can be committed or rollbacked in <see cref="M:ITHit.Server.ContextAsync`1.BeforeResponseAsync"/> method, which
+            is called right before starting sending response to the client.
+            After this method is called, no methods of interfaces which update state will be called. However methods
+            which read state can be called.
+            </para>
+            </remarks>    
+            <typeparam name="THierarchyItemAsync">Type implements <see cref="T:ITHit.Server.IHierarchyItemBaseAsync"/></typeparam>
+        </member>
+        <member name="P:ITHit.Server.EngineAsync`1.CalculateContentLength">
+            <summary>
+            Indicates if response content length is calculated. Default is <b>true</b>.
+            </summary>
+            <value>
+            Boolean value indicating if content length will be calculated in <see cref="M:ITHit.Server.EngineAsync`1.RunAsync(ITHit.Server.ContextAsync{`0})" /> method.
+            Default is <b>true</b>.
+            </value>
+            <remarks>
+            <para>
+            If this property is set to <b>true</b> engine will calculate output content length and set 
+            <see cref="P:ITHit.Server.ResponseAsync.ContentLength"/> property before returning from <see cref="M:ITHit.Server.EngineAsync`1.RunAsync(ITHit.Server.ContextAsync{`0})"/> method.
+            If you would like to send chunked responses you must set this property to <b>false</b>.
+            </para>
+            <para>
+            ASP.NET will send chunked responses only to <b>GET</b> verb if 
+            <b>HttpContext.Current.Response.BufferOutput = false</b> and request is HTTP 1.1. Responses to all
+            other verbs will not be chunked.
+            </para>
+            <para>
+            To send chunked responses from <b>HttpListener</b> you must set this property to false and set 
+            <b>HttpListenerContext.Response.SendChunked = true</b>. If <b>SendChunked=false</b> and 
+            <b>CalculateContentLength=false</b> than <b>HttpListener</b> will not send any response because the 
+            content length will be unknown.
+            </para>
+            <para>
+            Responses must not include both <b>Content-Length</b> header and <b>Transfer-Encoding: chunked</b> 
+            header. If server is sending chunked response client application will not be able to detect content length.
+            Downloading a large file using download manager client will not be able to see the entire content length 
+            and evaluate time required for download.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:ITHit.Server.EngineAsync`1.CorsAllowedFor">
+            <summary>
+            Enables or disables CORS.
+            </summary>
+            <remarks>
+            <para>
+            If this property is set to <b>*</b> CORS will be enabled for in all domains. In this case, if the <b>Origin</b> request header is available
+            the Engine will extract the value of the <b>Origin</b> header and set the <b>Access-Control-Allow-Origin</b> header to the value of the <b>Origin</b> header. 
+            If <b>Origin</b> header is not available the <b>Access-Control-Allow-Origin</b> header will be set to '*'.
+            </para>
+            <para>
+            To enable CORS for a specific domain set this property to the name of the of the domain.
+            To disable CORS set this property to <b>null</b> or empty string.
+            </para>
+            <para>
+            If CORS is enabled Access-Control headers are included in all responses.
+            </para>
+            </remarks>
+            <value>Domain for which CORS is enabled. Null or empty string if CORS is disabled. Default is <b>*</b> - CORS is enabled for all domains.</value>
+        </member>
+        <member name="P:ITHit.Server.EngineAsync`1.License">
+            <summary>
+            Gets or sets the license text.
+            </summary>
+            <value>
+            License string.
+            </value>
+            <remarks>
+            Make sure you do not make any changes in Data and Signature tags as 
+            license validation will fail in this case.
+            </remarks>
+            <example>
+            <code>
+                ...
+                engine.License = File.ReadAllText(HttpContext.Current.Request.PhysicalApplicationPath + "License.lic");
+                ...
+            </code>
+            </example>
+        </member>
+        <member name="P:ITHit.Server.EngineAsync`1.OutputXmlFormatting">
+            <summary>
+            Specifies whether XML written to the output will be formatted. Default is <b>false</b>.
+            </summary>
+        </member>
+        <member name="P:ITHit.Server.EngineAsync`1.ContentEncoding">
+            <summary>
+            Gets or sets the HTTP character set of the output stream. Default is UTF-8.
+            </summary>
+            <value>A <c>Encoding</c> object that contains information about the character set of the response.
+            Default is UTF-8.</value>
+        </member>
+        <member name="P:ITHit.Server.EngineAsync`1.UseFullUris">
+            <summary>
+            Specifies whether engine shall use full or relative urls. Default is <b>true</b>.
+            </summary>
+            <remarks>
+            By default full urls are used.
+            </remarks>
+        </member>
+        <member name="P:ITHit.Server.EngineAsync`1.Logger">
+            <summary>
+            <see cref="T:ITHit.Server.ILogger"/> instance which engine will use for logging.
+            </summary>
+        </member>
+        <member name="P:ITHit.Server.EngineAsync`1.AllowOffice12Versioning">
+            <exclude />
+        </member>
+        <member name="M:ITHit.Server.EngineAsync`1.RegisterMethodHandler(System.String,ITHit.Server.Extensibility.IMethodHandlerAsync{`0})">
+            <summary>
+            Registers custom method handler.
+            </summary>
+            <param name="method">HTTP verb.</param>
+            <param name="handler">Implementation of <see cref="T:ITHit.Server.Extensibility.IMethodHandlerAsync`1" /> that processes this HTTP verb.</param>
+            <returns>Original handler or null if no handler was set.</returns>
+            <remarks>
+            Using this method you can register custom method handler to be called by the engine.
+            If the handler for the specified method was already defined it is returned from this method.
+            The original handler can be saved and called later from your custom handler.
+            </remarks>
+            <example>
+            <code>
+            <![CDATA[
+               DavEngineAsync engine = new DavEngineAsync();
+               MyCustomGetHandler handler = new MyCustomGetHandler();
+               handler.OriginalHandler = engine.RegisterMethodHandler("GET", handler);
+            
+               MyDavContext context = new MyDavContext(...);
+               engine.RunAsync(context);
+            ]]>
+            </code>
+            </example>
+            <example>
+      <para>The code below is part of 'WebDAVServer.FileSystemStorage.AspNet' C# &amp; VB samples provided with the SDK.</para>
+      <code lang="C#"><![CDATA[internal class MyCustomGetHandler : IMethodHandlerAsync<IHierarchyItemAsync>
+{
+    public IMethodHandlerAsync<IHierarchyItemAsync> OriginalHandler { get; set; }
+
+    public bool EnableOutputBuffering
+    {
+        get { return false; }
+    }
+
+    public bool EnableOutputDebugLogging
+    {
+        get { return false; }
+    }
+
+    public bool EnableInputDebugLogging
+    {
+        get { return false; }
+    }
+
+    private readonly string htmlPath;
+
+    public MyCustomGetHandler(string contentRootPathFolder)
+    {
+        this.htmlPath = contentRootPathFolder;
+    }
+
+    public async Task ProcessRequestAsync(ContextAsync<IHierarchyItemAsync> context, IHierarchyItemAsync item)
+    {
+        string urlPath = context.Request.RawUrl.Substring(context.Request.ApplicationPath.TrimEnd('/').Length);
+
+        if (item is IItemCollectionAsync)
+        {
+            // In case of GET requests to WebDAV folders we serve a web page to display 
+            // any information about this server and how to use it.
+
+            // Remember to call EnsureBeforeResponseWasCalledAsync here if your context implementation
+            // makes some useful things in BeforeResponseAsync.
+            await context.EnsureBeforeResponseWasCalledAsync();
+            IHttpAsyncHandler page = (IHttpAsyncHandler)System.Web.Compilation.BuildManager.CreateInstanceFromVirtualPath(
+                "~/MyCustomHandlerPage.aspx", typeof(MyCustomHandlerPage));
+
+            if(Type.GetType("Mono.Runtime") != null)
+            {
+                page.ProcessRequest(HttpContext.Current);
+            }
+            else
+            {
+                // Here we call BeginProcessRequest instead of ProcessRequest to start an async page execution and be able to call RegisterAsyncTask if required. 
+                // To call APM method (Begin/End) from TAP method (Task/async/await) the Task.FromAsync must be used.
+                await Task.Factory.FromAsync(page.BeginProcessRequest, page.EndProcessRequest, HttpContext.Current, null);
+            }
+        }
+        else
+        {
+            await OriginalHandler.ProcessRequestAsync(context, item);
+        }
+    }
+
+    public bool AppliesTo(IHierarchyItemAsync item)
+    {
+        return item is IFolderAsync || OriginalHandler.AppliesTo(item);
+    }
+}
+]]></code>
+      <code lang="VB"><![CDATA[Friend Class MyCustomGetHandler
+    Implements IMethodHandlerAsync(Of IHierarchyItemAsync)
+
+    Public Property OriginalHandler As IMethodHandlerAsync(Of IHierarchyItemAsync)
+
+    Public ReadOnly Property EnableOutputBuffering As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableOutputBuffering
+        Get
+            Return False
+        End Get
+    End Property
+
+    Public ReadOnly Property EnableOutputDebugLogging As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableOutputDebugLogging
+        Get
+            Return False
+        End Get
+    End Property
+
+    Public ReadOnly Property EnableInputDebugLogging As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableInputDebugLogging
+        Get
+            Return False
+        End Get
+    End Property
+
+    Private ReadOnly htmlPath As String
+
+    Public Sub New(contentRootPathFolder As String)
+        Me.htmlPath = contentRootPathFolder
+    End Sub
+
+    Public Async Function ProcessRequestAsync(context As ContextAsync(Of IHierarchyItemAsync), item As IHierarchyItemAsync) As Task Implements IMethodHandlerAsync(Of IHierarchyItemAsync).ProcessRequestAsync
+        Dim urlPath As String = context.Request.RawUrl.Substring(context.Request.ApplicationPath.TrimEnd("/"c).Length)
+        If TypeOf item Is IItemCollectionAsync Then
+            ' In case of GET requests to WebDAV folders we serve a web page to display 
+            ' any information about this server and how to use it.
+            ' Remember to call EnsureBeforeResponseWasCalledAsync here if your context implementation
+            ' makes some useful things in BeforeResponseAsync.
+            Await context.EnsureBeforeResponseWasCalledAsync()
+            Dim page As IHttpAsyncHandler = CType(System.Web.Compilation.BuildManager.CreateInstanceFromVirtualPath("~/MyCustomHandlerPage.aspx", GetType(MyCustomHandlerPage)), IHttpAsyncHandler)
+            If Type.GetType("Mono.Runtime") IsNot Nothing Then
+                page.ProcessRequest(HttpContext.Current)
+            Else
+                ' Here we call BeginProcessRequest instead of ProcessRequest to start an async page execution and be able to call RegisterAsyncTask if required. 
+                ' To call APM method (Begin/End) from TAP method (Task/async/await) the Task.FromAsync must be used.
+                Await Task.Factory.FromAsync(AddressOf page.BeginProcessRequest, AddressOf page.EndProcessRequest, HttpContext.Current, Nothing)
+            End If
+        Else
+            Await OriginalHandler.ProcessRequestAsync(context, item)
+        End If
+    End Function
+
+    Public Function AppliesTo(item As IHierarchyItemAsync) As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).AppliesTo
+        Return TypeOf item Is IFolderAsync OrElse OriginalHandler.AppliesTo(item)
+    End Function
+End Class
+]]></code>
+    </example><example>
+      <para>The code below is part of 'CalDAVServer.SqlStorage.AspNet' C# &amp; VB samples provided with the SDK.</para>
+      <code lang="C#"><![CDATA[internal class MyCustomGetHandler : IMethodHandlerAsync<IHierarchyItemAsync>
+{
+    public IMethodHandlerAsync<IHierarchyItemAsync> OriginalHandler { get; set; }
+
+    public bool EnableOutputBuffering
+    {
+        get { return false; }
+    }
+
+    public bool EnableOutputDebugLogging
+    {
+        get { return false; }
+    }
+
+    public bool EnableInputDebugLogging
+    {
+        get { return false; }
+    }
+
+    private readonly string htmlPath;
+
+    public MyCustomGetHandler(string contentRootPathFolder)
+    {
+        this.htmlPath = contentRootPathFolder;
+    }
+
+    public async Task ProcessRequestAsync(ContextAsync<IHierarchyItemAsync> context, IHierarchyItemAsync item)
+    {
+        string urlPath = context.Request.RawUrl.Substring(context.Request.ApplicationPath.TrimEnd('/').Length);
+
+        if (item is IItemCollectionAsync)
+        {
+            // In case of GET requests to WebDAV folders we serve a web page to display 
+            // any information about this server and how to use it.
+
+            // Remember to call EnsureBeforeResponseWasCalledAsync here if your context implementation
+            // makes some useful things in BeforeResponseAsync.
+            await context.EnsureBeforeResponseWasCalledAsync();
+
+            // Request to iOS/OS X CalDAV/CardDAV profile.
+            if (context.Request.RawUrl.EndsWith("?connect"))
+            {
+                await WriteProfileAsync(context, item, htmlPath);
+                return;
+            }
+            IHttpAsyncHandler page = (IHttpAsyncHandler)System.Web.Compilation.BuildManager.CreateInstanceFromVirtualPath(
+                "~/MyCustomHandlerPage.aspx", typeof(MyCustomHandlerPage));
+
+            if(Type.GetType("Mono.Runtime") != null)
+            {
+                page.ProcessRequest(HttpContext.Current);
+            }
+            else
+            {
+                // Here we call BeginProcessRequest instead of ProcessRequest to start an async page execution and be able to call RegisterAsyncTask if required. 
+                // To call APM method (Begin/End) from TAP method (Task/async/await) the Task.FromAsync must be used.
+                await Task.Factory.FromAsync(page.BeginProcessRequest, page.EndProcessRequest, HttpContext.Current, null);
+            }
+        }
+        else
+        {
+            await OriginalHandler.ProcessRequestAsync(context, item);
+        }
+    }
+
+    public bool AppliesTo(IHierarchyItemAsync item)
+    {
+        return item is IFolderAsync || OriginalHandler.AppliesTo(item);
+    }
+
+    private async Task WriteProfileAsync(ContextAsync<IHierarchyItemAsync> context, IHierarchyItemBaseAsync item, string htmlPath)
+    {
+        string mobileconfigFileName = null;
+        string decription = null;
+        if (item is ICalendarFolderAsync)
+        {
+            mobileconfigFileName = "CalDAV.AppleProfileTemplete.mobileconfig";
+            decription = (item as ICalendarFolderAsync).CalendarDescription;
+        }
+
+        decription = !string.IsNullOrEmpty(decription) ? decription : item.Name;
+
+        string templateContent = null;
+        using (TextReader reader = new StreamReader(Path.Combine(htmlPath, mobileconfigFileName)))
+        {
+            templateContent = await reader.ReadToEndAsync();
+        }
+
+        Uri url = new Uri(context.Request.UrlPrefix);
+
+        string payloadUUID = item.Path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).Last(); // PayloadUUID
+
+        string profile = string.Format(templateContent
+            , url.Host // host name
+            , item.Path // CalDAV / CardDAV Principal URL. Here we can return (await (item as ICurrentUserPrincipalAsync).GetCurrentUserPrincipalAsync()).Path if needed.
+            , (context as DavContext).Identity.Name // user name
+            , url.Port // port                
+            , (url.Scheme == "https").ToString().ToLower() // SSL
+            , decription // CardDAV / CardDAV Account Description
+            , Assembly.GetAssembly(this.GetType()).GetName().Version.ToString()
+            , Assembly.GetAssembly(typeof(DavEngineAsync)).GetName().Version.ToString()
+            , payloadUUID
+            );
+
+        byte[] profileBytes = SignProfile(context, profile);
+
+        context.Response.ContentType = "application/x-apple-aspen-config";
+        context.Response.AddHeader("Content-Disposition", "attachment; filename=profile.mobileconfig");
+        context.Response.ContentLength = profileBytes.Length;
+        await context.Response.OutputStream.WriteAsync(profileBytes, 0, profileBytes.Length);
+    }
+
+    private byte[] SignProfile(ContextAsync<IHierarchyItemAsync> context, string profile)
+    {
+        // Here you will sign your profile with SSL certificate to avoid "Unsigned" warning on iOS and OS X.
+        // For demo purposes we just return the profile content unmodified.
+        return context.Engine.ContentEncoding.GetBytes(profile);
+    }
+}
+]]></code>
+      <code lang="VB"><![CDATA[Friend Class MyCustomGetHandler
+    Implements IMethodHandlerAsync(Of IHierarchyItemAsync)
+
+    Public Property OriginalHandler As IMethodHandlerAsync(Of IHierarchyItemAsync)
+
+    Public ReadOnly Property EnableOutputBuffering As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableOutputBuffering
+        Get
+            Return False
+        End Get
+    End Property
+
+    Public ReadOnly Property EnableOutputDebugLogging As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableOutputDebugLogging
+        Get
+            Return False
+        End Get
+    End Property
+
+    Public ReadOnly Property EnableInputDebugLogging As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableInputDebugLogging
+        Get
+            Return False
+        End Get
+    End Property
+
+    Private ReadOnly htmlPath As String
+
+    Public Sub New(contentRootPathFolder As String)
+        Me.htmlPath = contentRootPathFolder
+    End Sub
+
+    Public Async Function ProcessRequestAsync(context As ContextAsync(Of IHierarchyItemAsync), item As IHierarchyItemAsync) As Task Implements IMethodHandlerAsync(Of IHierarchyItemAsync).ProcessRequestAsync
+        Dim urlPath As String = context.Request.RawUrl.Substring(context.Request.ApplicationPath.TrimEnd("/"c).Length)
+        If TypeOf item Is IItemCollectionAsync Then
+            ' In case of GET requests to WebDAV folders we serve a web page to display 
+            ' any information about this server and how to use it.
+            ' Remember to call EnsureBeforeResponseWasCalledAsync here if your context implementation
+            ' makes some useful things in BeforeResponseAsync.
+            Await context.EnsureBeforeResponseWasCalledAsync()
+            ' Request to iOS/OS X CalDAV/CardDAV profile.
+            If context.Request.RawUrl.EndsWith("?connect") Then
+                Await WriteProfileAsync(context, item, htmlPath)
+                Return
+            End If
+
+            Dim page As IHttpAsyncHandler = CType(System.Web.Compilation.BuildManager.CreateInstanceFromVirtualPath("~/MyCustomHandlerPage.aspx", GetType(MyCustomHandlerPage)), IHttpAsyncHandler)
+            If Type.GetType("Mono.Runtime") IsNot Nothing Then
+                page.ProcessRequest(HttpContext.Current)
+            Else
+                ' Here we call BeginProcessRequest instead of ProcessRequest to start an async page execution and be able to call RegisterAsyncTask if required. 
+                ' To call APM method (Begin/End) from TAP method (Task/async/await) the Task.FromAsync must be used.
+                Await Task.Factory.FromAsync(AddressOf page.BeginProcessRequest, AddressOf page.EndProcessRequest, HttpContext.Current, Nothing)
+            End If
+        Else
+            Await OriginalHandler.ProcessRequestAsync(context, item)
+        End If
+    End Function
+
+    Public Function AppliesTo(item As IHierarchyItemAsync) As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).AppliesTo
+        Return TypeOf item Is IFolderAsync OrElse OriginalHandler.AppliesTo(item)
+    End Function
+
+    Private Async Function WriteProfileAsync(context As ContextAsync(Of IHierarchyItemAsync), item As IHierarchyItemBaseAsync, htmlPath As String) As Task
+        Dim mobileconfigFileName As String = Nothing
+        Dim decription As String = Nothing
+        If TypeOf item Is ICalendarFolderAsync Then
+            mobileconfigFileName = "CalDAV.AppleProfileTemplete.mobileconfig"
+            decription = TryCast(item, ICalendarFolderAsync).CalendarDescription
+        End If
+
+        decription = If(Not String.IsNullOrEmpty(decription), decription, item.Name)
+        Dim templateContent As String = Nothing
+        Using reader As TextReader = New StreamReader(Path.Combine(htmlPath, mobileconfigFileName))
+            templateContent = Await reader.ReadToEndAsync()
+        End Using
+
+        Dim url As Uri = New Uri(context.Request.UrlPrefix)
+        Dim payloadUUID As String = item.Path.Split({"/"c}, StringSplitOptions.RemoveEmptyEntries).Last()
+        Dim profile As String = String.Format(templateContent,
+                                             url.Host, ' host name
+                                             item.Path, ' CalDAV / CardDAV Principal URL. Here we can return (await (item as ICurrentUserPrincipalAsync).GetCurrentUserPrincipalAsync()).Path if needed.
+                                             TryCast(context, DavContext).Identity.Name, ' user name
+                                             url.Port, ' port                
+                                             (url.Scheme = "https").ToString().ToLower(), ' SSL
+                                             decription, ' CardDAV / CardDAV Account Description
+                                             Assembly.GetAssembly(Me.GetType()).GetName().Version.ToString(),
+                                             Assembly.GetAssembly(GetType(DavEngineAsync)).GetName().Version.ToString(),
+                                             payloadUUID
+                                             )
+        Dim profileBytes As Byte() = SignProfile(context, profile)
+        context.Response.ContentType = "application/x-apple-aspen-config"
+        context.Response.AddHeader("Content-Disposition", "attachment; filename=profile.mobileconfig")
+        context.Response.ContentLength = profileBytes.Length
+        Await context.Response.OutputStream.WriteAsync(profileBytes, 0, profileBytes.Length)
+    End Function
+
+    Private Function SignProfile(context As ContextAsync(Of IHierarchyItemAsync), profile As String) As Byte()
+        ' Here you will sign your profile with SSL certificate to avoid "Unsigned" warning on iOS and OS X.
+        ' For demo purposes we just return the profile content unmodified.
+        Return context.Engine.ContentEncoding.GetBytes(profile)
+    End Function
+End Class
+]]></code>
+    </example><example>
+      <para>The code below is part of 'CardDAVServer.SqlStorage.AspNet' C# &amp; VB samples provided with the SDK.</para>
+      <code lang="C#"><![CDATA[internal class MyCustomGetHandler : IMethodHandlerAsync<IHierarchyItemAsync>
+{
+    public IMethodHandlerAsync<IHierarchyItemAsync> OriginalHandler { get; set; }
+
+    public bool EnableOutputBuffering
+    {
+        get { return false; }
+    }
+
+    public bool EnableOutputDebugLogging
+    {
+        get { return false; }
+    }
+
+    public bool EnableInputDebugLogging
+    {
+        get { return false; }
+    }
+
+    private readonly string htmlPath;
+
+    public MyCustomGetHandler(string contentRootPathFolder)
+    {
+        this.htmlPath = contentRootPathFolder;
+    }
+
+    public async Task ProcessRequestAsync(ContextAsync<IHierarchyItemAsync> context, IHierarchyItemAsync item)
+    {
+        string urlPath = context.Request.RawUrl.Substring(context.Request.ApplicationPath.TrimEnd('/').Length);
+
+        if (item is IItemCollectionAsync)
+        {
+            // In case of GET requests to WebDAV folders we serve a web page to display 
+            // any information about this server and how to use it.
+
+            // Remember to call EnsureBeforeResponseWasCalledAsync here if your context implementation
+            // makes some useful things in BeforeResponseAsync.
+            await context.EnsureBeforeResponseWasCalledAsync();
+
+            // Request to iOS/OS X CalDAV/CardDAV profile.
+            if (context.Request.RawUrl.EndsWith("?connect"))
+            {
+                await WriteProfileAsync(context, item, htmlPath);
+                return;
+            }
+            IHttpAsyncHandler page = (IHttpAsyncHandler)System.Web.Compilation.BuildManager.CreateInstanceFromVirtualPath(
+                "~/MyCustomHandlerPage.aspx", typeof(MyCustomHandlerPage));
+
+            if(Type.GetType("Mono.Runtime") != null)
+            {
+                page.ProcessRequest(HttpContext.Current);
+            }
+            else
+            {
+                // Here we call BeginProcessRequest instead of ProcessRequest to start an async page execution and be able to call RegisterAsyncTask if required. 
+                // To call APM method (Begin/End) from TAP method (Task/async/await) the Task.FromAsync must be used.
+                await Task.Factory.FromAsync(page.BeginProcessRequest, page.EndProcessRequest, HttpContext.Current, null);
+            }
+        }
+        else
+        {
+            await OriginalHandler.ProcessRequestAsync(context, item);
+        }
+    }
+
+    public bool AppliesTo(IHierarchyItemAsync item)
+    {
+        return item is IFolderAsync || OriginalHandler.AppliesTo(item);
+    }
+
+    private async Task WriteProfileAsync(ContextAsync<IHierarchyItemAsync> context, IHierarchyItemBaseAsync item, string htmlPath)
+    {
+        string mobileconfigFileName = null;
+        string decription = null;
+        if (item is IAddressbookFolderAsync)
+        {
+            mobileconfigFileName = "CardDAV.AppleProfileTemplete.mobileconfig";
+            decription = (item as IAddressbookFolderAsync).AddressbookDescription;
+        }
+
+        decription = !string.IsNullOrEmpty(decription) ? decription : item.Name;
+
+        string templateContent = null;
+        using (TextReader reader = new StreamReader(Path.Combine(htmlPath, mobileconfigFileName)))
+        {
+            templateContent = await reader.ReadToEndAsync();
+        }
+
+        Uri url = new Uri(context.Request.UrlPrefix);
+
+        string payloadUUID = item.Path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).Last(); // PayloadUUID
+
+        string profile = string.Format(templateContent
+            , url.Host // host name
+            , item.Path // CalDAV / CardDAV Principal URL. Here we can return (await (item as ICurrentUserPrincipalAsync).GetCurrentUserPrincipalAsync()).Path if needed.
+            , (context as DavContext).Identity.Name // user name
+            , url.Port // port                
+            , (url.Scheme == "https").ToString().ToLower() // SSL
+            , decription // CardDAV / CardDAV Account Description
+            , Assembly.GetAssembly(this.GetType()).GetName().Version.ToString()
+            , Assembly.GetAssembly(typeof(DavEngineAsync)).GetName().Version.ToString()
+            , payloadUUID
+            );
+
+        byte[] profileBytes = SignProfile(context, profile);
+
+        context.Response.ContentType = "application/x-apple-aspen-config";
+        context.Response.AddHeader("Content-Disposition", "attachment; filename=profile.mobileconfig");
+        context.Response.ContentLength = profileBytes.Length;
+        await context.Response.OutputStream.WriteAsync(profileBytes, 0, profileBytes.Length);
+    }
+
+    private byte[] SignProfile(ContextAsync<IHierarchyItemAsync> context, string profile)
+    {
+        // Here you will sign your profile with SSL certificate to avoid "Unsigned" warning on iOS and OS X.
+        // For demo purposes we just return the profile content unmodified.
+        return context.Engine.ContentEncoding.GetBytes(profile);
+    }
+}
+]]></code>
+      <code lang="VB"><![CDATA[Friend Class MyCustomGetHandler
+    Implements IMethodHandlerAsync(Of IHierarchyItemAsync)
+
+    Public Property OriginalHandler As IMethodHandlerAsync(Of IHierarchyItemAsync)
+
+    Public ReadOnly Property EnableOutputBuffering As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableOutputBuffering
+        Get
+            Return False
+        End Get
+    End Property
+
+    Public ReadOnly Property EnableOutputDebugLogging As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableOutputDebugLogging
+        Get
+            Return False
+        End Get
+    End Property
+
+    Public ReadOnly Property EnableInputDebugLogging As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableInputDebugLogging
+        Get
+            Return False
+        End Get
+    End Property
+
+    Private ReadOnly htmlPath As String
+
+    Public Sub New(contentRootPathFolder As String)
+        Me.htmlPath = contentRootPathFolder
+    End Sub
+
+    Public Async Function ProcessRequestAsync(context As ContextAsync(Of IHierarchyItemAsync), item As IHierarchyItemAsync) As Task Implements IMethodHandlerAsync(Of IHierarchyItemAsync).ProcessRequestAsync
+        Dim urlPath As String = context.Request.RawUrl.Substring(context.Request.ApplicationPath.TrimEnd("/"c).Length)
+        If TypeOf item Is IItemCollectionAsync Then
+            ' In case of GET requests to WebDAV folders we serve a web page to display 
+            ' any information about this server and how to use it.
+            ' Remember to call EnsureBeforeResponseWasCalledAsync here if your context implementation
+            ' makes some useful things in BeforeResponseAsync.
+            Await context.EnsureBeforeResponseWasCalledAsync()
+            ' Request to iOS/OS X CalDAV/CardDAV profile.
+            If context.Request.RawUrl.EndsWith("?connect") Then
+                Await WriteProfileAsync(context, item, htmlPath)
+                Return
+            End If
+
+            Dim page As IHttpAsyncHandler = CType(System.Web.Compilation.BuildManager.CreateInstanceFromVirtualPath("~/MyCustomHandlerPage.aspx", GetType(MyCustomHandlerPage)), IHttpAsyncHandler)
+            If Type.GetType("Mono.Runtime") IsNot Nothing Then
+                page.ProcessRequest(HttpContext.Current)
+            Else
+                ' Here we call BeginProcessRequest instead of ProcessRequest to start an async page execution and be able to call RegisterAsyncTask if required. 
+                ' To call APM method (Begin/End) from TAP method (Task/async/await) the Task.FromAsync must be used.
+                Await Task.Factory.FromAsync(AddressOf page.BeginProcessRequest, AddressOf page.EndProcessRequest, HttpContext.Current, Nothing)
+            End If
+        Else
+            Await OriginalHandler.ProcessRequestAsync(context, item)
+        End If
+    End Function
+
+    Public Function AppliesTo(item As IHierarchyItemAsync) As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).AppliesTo
+        Return TypeOf item Is IFolderAsync OrElse OriginalHandler.AppliesTo(item)
+    End Function
+
+    Private Async Function WriteProfileAsync(context As ContextAsync(Of IHierarchyItemAsync), item As IHierarchyItemBaseAsync, htmlPath As String) As Task
+        Dim mobileconfigFileName As String = Nothing
+        Dim decription As String = Nothing
+        If TypeOf item Is IAddressbookFolderAsync Then
+            mobileconfigFileName = "CardDAV.AppleProfileTemplete.mobileconfig"
+            decription = TryCast(item, IAddressbookFolderAsync).AddressbookDescription
+        End If
+
+        decription = If(Not String.IsNullOrEmpty(decription), decription, item.Name)
+        Dim templateContent As String = Nothing
+        Using reader As TextReader = New StreamReader(Path.Combine(htmlPath, mobileconfigFileName))
+            templateContent = Await reader.ReadToEndAsync()
+        End Using
+
+        Dim url As Uri = New Uri(context.Request.UrlPrefix)
+        Dim payloadUUID As String = item.Path.Split({"/"c}, StringSplitOptions.RemoveEmptyEntries).Last()
+        Dim profile As String = String.Format(templateContent,
+                                             url.Host, ' host name
+                                             item.Path, ' CalDAV / CardDAV Principal URL. Here we can return (await (item as ICurrentUserPrincipalAsync).GetCurrentUserPrincipalAsync()).Path if needed.
+                                             TryCast(context, DavContext).Identity.Name, ' user name
+                                             url.Port, ' port                
+                                             (url.Scheme = "https").ToString().ToLower(), ' SSL
+                                             decription, ' CardDAV / CardDAV Account Description
+                                             Assembly.GetAssembly(Me.GetType()).GetName().Version.ToString(),
+                                             Assembly.GetAssembly(GetType(DavEngineAsync)).GetName().Version.ToString(),
+                                             payloadUUID
+                                             )
+        Dim profileBytes As Byte() = SignProfile(context, profile)
+        context.Response.ContentType = "application/x-apple-aspen-config"
+        context.Response.AddHeader("Content-Disposition", "attachment; filename=profile.mobileconfig")
+        context.Response.ContentLength = profileBytes.Length
+        Await context.Response.OutputStream.WriteAsync(profileBytes, 0, profileBytes.Length)
+    End Function
+
+    Private Function SignProfile(context As ContextAsync(Of IHierarchyItemAsync), profile As String) As Byte()
+        ' Here you will sign your profile with SSL certificate to avoid "Unsigned" warning on iOS and OS X.
+        ' For demo purposes we just return the profile content unmodified.
+        Return context.Engine.ContentEncoding.GetBytes(profile)
+    End Function
+End Class
+]]></code>
+    </example>
+        </member>
+        <member name="M:ITHit.Server.EngineAsync`1.RunAsync(ITHit.Server.ContextAsync{`0})">
+            <summary>
+            Processes request and generates response.
+            </summary>
+            <param name="context">
+            Instance of your context class derived from <see cref="T:ITHit.Server.ContextAsync`1"/> class.
+            </param>
+            <returns> .</returns>
+            <remarks>
+            You must call this method in each request to your server passing your 
+            context class derived from <see cref="T:ITHit.Server.ContextAsync`1"/> as input parameter. 
+            </remarks>
+        </member>
+        <member name="T:ITHit.Server.Extensibility.IMethodHandlerAsync`1">
+            <summary>
+            Represents HTTP method handler.
+            </summary>
+            <remarks>
+            <para>
+            The IT Hit Server Engine allows creating custom HTTP handlers and replacing original engine handlers. 
+            To add or replace handler call <see cref="M:ITHit.Server.EngineAsync`1.RegisterMethodHandler(System.String,ITHit.Server.Extensibility.IMethodHandlerAsync{`0})" /> method passing HTTP method
+            name and object instance 
+            implementing <see cref="T:ITHit.Server.Extensibility.IMethodHandlerAsync`1" />. The original handler, if any, 
+            is returned from <see cref="M:ITHit.Server.EngineAsync`1.RegisterMethodHandler(System.String,ITHit.Server.Extensibility.IMethodHandlerAsync{`0})" /> method. 
+            </para>
+            <para>
+            The <see cref="M:ITHit.Server.Extensibility.IMethodHandlerAsync`1.ProcessRequestAsync(ITHit.Server.ContextAsync{`0},`0)" /> method of this interface is called by the engine during 
+            <see cref="M:ITHit.Server.EngineAsync`1.RunAsync(ITHit.Server.ContextAsync{`0})" /> call. 
+            The hierarchy item returned from <see cref="M:ITHit.Server.ContextAsync`1.GetHierarchyItemAsync(System.String)" /> is passed to ProcessRequest 
+            method as a parameter.
+            </para>
+            <para>
+            The handler must call <see cref="M:ITHit.Server.ContextAsync`1.BeforeResponseAsync" /> when all update methods have been called and 
+            the handler is about to start writing response.
+            </para>
+            </remarks>
+            <example>
+      <para>The code below is part of 'WebDAVServer.FileSystemStorage.AspNet' C# &amp; VB samples provided with the SDK.</para>
+      <code lang="C#"><![CDATA[internal class MyCustomGetHandler : IMethodHandlerAsync<IHierarchyItemAsync>
+{
+    public IMethodHandlerAsync<IHierarchyItemAsync> OriginalHandler { get; set; }
+
+    public bool EnableOutputBuffering
+    {
+        get { return false; }
+    }
+
+    public bool EnableOutputDebugLogging
+    {
+        get { return false; }
+    }
+
+    public bool EnableInputDebugLogging
+    {
+        get { return false; }
+    }
+
+    private readonly string htmlPath;
+
+    public MyCustomGetHandler(string contentRootPathFolder)
+    {
+        this.htmlPath = contentRootPathFolder;
+    }
+
+    public async Task ProcessRequestAsync(ContextAsync<IHierarchyItemAsync> context, IHierarchyItemAsync item)
+    {
+        string urlPath = context.Request.RawUrl.Substring(context.Request.ApplicationPath.TrimEnd('/').Length);
+
+        if (item is IItemCollectionAsync)
+        {
+            // In case of GET requests to WebDAV folders we serve a web page to display 
+            // any information about this server and how to use it.
+
+            // Remember to call EnsureBeforeResponseWasCalledAsync here if your context implementation
+            // makes some useful things in BeforeResponseAsync.
+            await context.EnsureBeforeResponseWasCalledAsync();
+            IHttpAsyncHandler page = (IHttpAsyncHandler)System.Web.Compilation.BuildManager.CreateInstanceFromVirtualPath(
+                "~/MyCustomHandlerPage.aspx", typeof(MyCustomHandlerPage));
+
+            if(Type.GetType("Mono.Runtime") != null)
+            {
+                page.ProcessRequest(HttpContext.Current);
+            }
+            else
+            {
+                // Here we call BeginProcessRequest instead of ProcessRequest to start an async page execution and be able to call RegisterAsyncTask if required. 
+                // To call APM method (Begin/End) from TAP method (Task/async/await) the Task.FromAsync must be used.
+                await Task.Factory.FromAsync(page.BeginProcessRequest, page.EndProcessRequest, HttpContext.Current, null);
+            }
+        }
+        else
+        {
+            await OriginalHandler.ProcessRequestAsync(context, item);
+        }
+    }
+
+    public bool AppliesTo(IHierarchyItemAsync item)
+    {
+        return item is IFolderAsync || OriginalHandler.AppliesTo(item);
+    }
+}
+]]></code>
+      <code lang="VB"><![CDATA[Friend Class MyCustomGetHandler
+    Implements IMethodHandlerAsync(Of IHierarchyItemAsync)
+
+    Public Property OriginalHandler As IMethodHandlerAsync(Of IHierarchyItemAsync)
+
+    Public ReadOnly Property EnableOutputBuffering As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableOutputBuffering
+        Get
+            Return False
+        End Get
+    End Property
+
+    Public ReadOnly Property EnableOutputDebugLogging As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableOutputDebugLogging
+        Get
+            Return False
+        End Get
+    End Property
+
+    Public ReadOnly Property EnableInputDebugLogging As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableInputDebugLogging
+        Get
+            Return False
+        End Get
+    End Property
+
+    Private ReadOnly htmlPath As String
+
+    Public Sub New(contentRootPathFolder As String)
+        Me.htmlPath = contentRootPathFolder
+    End Sub
+
+    Public Async Function ProcessRequestAsync(context As ContextAsync(Of IHierarchyItemAsync), item As IHierarchyItemAsync) As Task Implements IMethodHandlerAsync(Of IHierarchyItemAsync).ProcessRequestAsync
+        Dim urlPath As String = context.Request.RawUrl.Substring(context.Request.ApplicationPath.TrimEnd("/"c).Length)
+        If TypeOf item Is IItemCollectionAsync Then
+            ' In case of GET requests to WebDAV folders we serve a web page to display 
+            ' any information about this server and how to use it.
+            ' Remember to call EnsureBeforeResponseWasCalledAsync here if your context implementation
+            ' makes some useful things in BeforeResponseAsync.
+            Await context.EnsureBeforeResponseWasCalledAsync()
+            Dim page As IHttpAsyncHandler = CType(System.Web.Compilation.BuildManager.CreateInstanceFromVirtualPath("~/MyCustomHandlerPage.aspx", GetType(MyCustomHandlerPage)), IHttpAsyncHandler)
+            If Type.GetType("Mono.Runtime") IsNot Nothing Then
+                page.ProcessRequest(HttpContext.Current)
+            Else
+                ' Here we call BeginProcessRequest instead of ProcessRequest to start an async page execution and be able to call RegisterAsyncTask if required. 
+                ' To call APM method (Begin/End) from TAP method (Task/async/await) the Task.FromAsync must be used.
+                Await Task.Factory.FromAsync(AddressOf page.BeginProcessRequest, AddressOf page.EndProcessRequest, HttpContext.Current, Nothing)
+            End If
+        Else
+            Await OriginalHandler.ProcessRequestAsync(context, item)
+        End If
+    End Function
+
+    Public Function AppliesTo(item As IHierarchyItemAsync) As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).AppliesTo
+        Return TypeOf item Is IFolderAsync OrElse OriginalHandler.AppliesTo(item)
+    End Function
+End Class
+]]></code>
+    </example><example>
+      <para>The code below is part of 'CalDAVServer.SqlStorage.AspNet' C# &amp; VB samples provided with the SDK.</para>
+      <code lang="C#"><![CDATA[internal class MyCustomGetHandler : IMethodHandlerAsync<IHierarchyItemAsync>
+{
+    public IMethodHandlerAsync<IHierarchyItemAsync> OriginalHandler { get; set; }
+
+    public bool EnableOutputBuffering
+    {
+        get { return false; }
+    }
+
+    public bool EnableOutputDebugLogging
+    {
+        get { return false; }
+    }
+
+    public bool EnableInputDebugLogging
+    {
+        get { return false; }
+    }
+
+    private readonly string htmlPath;
+
+    public MyCustomGetHandler(string contentRootPathFolder)
+    {
+        this.htmlPath = contentRootPathFolder;
+    }
+
+    public async Task ProcessRequestAsync(ContextAsync<IHierarchyItemAsync> context, IHierarchyItemAsync item)
+    {
+        string urlPath = context.Request.RawUrl.Substring(context.Request.ApplicationPath.TrimEnd('/').Length);
+
+        if (item is IItemCollectionAsync)
+        {
+            // In case of GET requests to WebDAV folders we serve a web page to display 
+            // any information about this server and how to use it.
+
+            // Remember to call EnsureBeforeResponseWasCalledAsync here if your context implementation
+            // makes some useful things in BeforeResponseAsync.
+            await context.EnsureBeforeResponseWasCalledAsync();
+
+            // Request to iOS/OS X CalDAV/CardDAV profile.
+            if (context.Request.RawUrl.EndsWith("?connect"))
+            {
+                await WriteProfileAsync(context, item, htmlPath);
+                return;
+            }
+            IHttpAsyncHandler page = (IHttpAsyncHandler)System.Web.Compilation.BuildManager.CreateInstanceFromVirtualPath(
+                "~/MyCustomHandlerPage.aspx", typeof(MyCustomHandlerPage));
+
+            if(Type.GetType("Mono.Runtime") != null)
+            {
+                page.ProcessRequest(HttpContext.Current);
+            }
+            else
+            {
+                // Here we call BeginProcessRequest instead of ProcessRequest to start an async page execution and be able to call RegisterAsyncTask if required. 
+                // To call APM method (Begin/End) from TAP method (Task/async/await) the Task.FromAsync must be used.
+                await Task.Factory.FromAsync(page.BeginProcessRequest, page.EndProcessRequest, HttpContext.Current, null);
+            }
+        }
+        else
+        {
+            await OriginalHandler.ProcessRequestAsync(context, item);
+        }
+    }
+
+    public bool AppliesTo(IHierarchyItemAsync item)
+    {
+        return item is IFolderAsync || OriginalHandler.AppliesTo(item);
+    }
+
+    private async Task WriteProfileAsync(ContextAsync<IHierarchyItemAsync> context, IHierarchyItemBaseAsync item, string htmlPath)
+    {
+        string mobileconfigFileName = null;
+        string decription = null;
+        if (item is ICalendarFolderAsync)
+        {
+            mobileconfigFileName = "CalDAV.AppleProfileTemplete.mobileconfig";
+            decription = (item as ICalendarFolderAsync).CalendarDescription;
+        }
+
+        decription = !string.IsNullOrEmpty(decription) ? decription : item.Name;
+
+        string templateContent = null;
+        using (TextReader reader = new StreamReader(Path.Combine(htmlPath, mobileconfigFileName)))
+        {
+            templateContent = await reader.ReadToEndAsync();
+        }
+
+        Uri url = new Uri(context.Request.UrlPrefix);
+
+        string payloadUUID = item.Path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).Last(); // PayloadUUID
+
+        string profile = string.Format(templateContent
+            , url.Host // host name
+            , item.Path // CalDAV / CardDAV Principal URL. Here we can return (await (item as ICurrentUserPrincipalAsync).GetCurrentUserPrincipalAsync()).Path if needed.
+            , (context as DavContext).Identity.Name // user name
+            , url.Port // port                
+            , (url.Scheme == "https").ToString().ToLower() // SSL
+            , decription // CardDAV / CardDAV Account Description
+            , Assembly.GetAssembly(this.GetType()).GetName().Version.ToString()
+            , Assembly.GetAssembly(typeof(DavEngineAsync)).GetName().Version.ToString()
+            , payloadUUID
+            );
+
+        byte[] profileBytes = SignProfile(context, profile);
+
+        context.Response.ContentType = "application/x-apple-aspen-config";
+        context.Response.AddHeader("Content-Disposition", "attachment; filename=profile.mobileconfig");
+        context.Response.ContentLength = profileBytes.Length;
+        await context.Response.OutputStream.WriteAsync(profileBytes, 0, profileBytes.Length);
+    }
+
+    private byte[] SignProfile(ContextAsync<IHierarchyItemAsync> context, string profile)
+    {
+        // Here you will sign your profile with SSL certificate to avoid "Unsigned" warning on iOS and OS X.
+        // For demo purposes we just return the profile content unmodified.
+        return context.Engine.ContentEncoding.GetBytes(profile);
+    }
+}
+]]></code>
+      <code lang="VB"><![CDATA[Friend Class MyCustomGetHandler
+    Implements IMethodHandlerAsync(Of IHierarchyItemAsync)
+
+    Public Property OriginalHandler As IMethodHandlerAsync(Of IHierarchyItemAsync)
+
+    Public ReadOnly Property EnableOutputBuffering As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableOutputBuffering
+        Get
+            Return False
+        End Get
+    End Property
+
+    Public ReadOnly Property EnableOutputDebugLogging As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableOutputDebugLogging
+        Get
+            Return False
+        End Get
+    End Property
+
+    Public ReadOnly Property EnableInputDebugLogging As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableInputDebugLogging
+        Get
+            Return False
+        End Get
+    End Property
+
+    Private ReadOnly htmlPath As String
+
+    Public Sub New(contentRootPathFolder As String)
+        Me.htmlPath = contentRootPathFolder
+    End Sub
+
+    Public Async Function ProcessRequestAsync(context As ContextAsync(Of IHierarchyItemAsync), item As IHierarchyItemAsync) As Task Implements IMethodHandlerAsync(Of IHierarchyItemAsync).ProcessRequestAsync
+        Dim urlPath As String = context.Request.RawUrl.Substring(context.Request.ApplicationPath.TrimEnd("/"c).Length)
+        If TypeOf item Is IItemCollectionAsync Then
+            ' In case of GET requests to WebDAV folders we serve a web page to display 
+            ' any information about this server and how to use it.
+            ' Remember to call EnsureBeforeResponseWasCalledAsync here if your context implementation
+            ' makes some useful things in BeforeResponseAsync.
+            Await context.EnsureBeforeResponseWasCalledAsync()
+            ' Request to iOS/OS X CalDAV/CardDAV profile.
+            If context.Request.RawUrl.EndsWith("?connect") Then
+                Await WriteProfileAsync(context, item, htmlPath)
+                Return
+            End If
+
+            Dim page As IHttpAsyncHandler = CType(System.Web.Compilation.BuildManager.CreateInstanceFromVirtualPath("~/MyCustomHandlerPage.aspx", GetType(MyCustomHandlerPage)), IHttpAsyncHandler)
+            If Type.GetType("Mono.Runtime") IsNot Nothing Then
+                page.ProcessRequest(HttpContext.Current)
+            Else
+                ' Here we call BeginProcessRequest instead of ProcessRequest to start an async page execution and be able to call RegisterAsyncTask if required. 
+                ' To call APM method (Begin/End) from TAP method (Task/async/await) the Task.FromAsync must be used.
+                Await Task.Factory.FromAsync(AddressOf page.BeginProcessRequest, AddressOf page.EndProcessRequest, HttpContext.Current, Nothing)
+            End If
+        Else
+            Await OriginalHandler.ProcessRequestAsync(context, item)
+        End If
+    End Function
+
+    Public Function AppliesTo(item As IHierarchyItemAsync) As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).AppliesTo
+        Return TypeOf item Is IFolderAsync OrElse OriginalHandler.AppliesTo(item)
+    End Function
+
+    Private Async Function WriteProfileAsync(context As ContextAsync(Of IHierarchyItemAsync), item As IHierarchyItemBaseAsync, htmlPath As String) As Task
+        Dim mobileconfigFileName As String = Nothing
+        Dim decription As String = Nothing
+        If TypeOf item Is ICalendarFolderAsync Then
+            mobileconfigFileName = "CalDAV.AppleProfileTemplete.mobileconfig"
+            decription = TryCast(item, ICalendarFolderAsync).CalendarDescription
+        End If
+
+        decription = If(Not String.IsNullOrEmpty(decription), decription, item.Name)
+        Dim templateContent As String = Nothing
+        Using reader As TextReader = New StreamReader(Path.Combine(htmlPath, mobileconfigFileName))
+            templateContent = Await reader.ReadToEndAsync()
+        End Using
+
+        Dim url As Uri = New Uri(context.Request.UrlPrefix)
+        Dim payloadUUID As String = item.Path.Split({"/"c}, StringSplitOptions.RemoveEmptyEntries).Last()
+        Dim profile As String = String.Format(templateContent,
+                                             url.Host, ' host name
+                                             item.Path, ' CalDAV / CardDAV Principal URL. Here we can return (await (item as ICurrentUserPrincipalAsync).GetCurrentUserPrincipalAsync()).Path if needed.
+                                             TryCast(context, DavContext).Identity.Name, ' user name
+                                             url.Port, ' port                
+                                             (url.Scheme = "https").ToString().ToLower(), ' SSL
+                                             decription, ' CardDAV / CardDAV Account Description
+                                             Assembly.GetAssembly(Me.GetType()).GetName().Version.ToString(),
+                                             Assembly.GetAssembly(GetType(DavEngineAsync)).GetName().Version.ToString(),
+                                             payloadUUID
+                                             )
+        Dim profileBytes As Byte() = SignProfile(context, profile)
+        context.Response.ContentType = "application/x-apple-aspen-config"
+        context.Response.AddHeader("Content-Disposition", "attachment; filename=profile.mobileconfig")
+        context.Response.ContentLength = profileBytes.Length
+        Await context.Response.OutputStream.WriteAsync(profileBytes, 0, profileBytes.Length)
+    End Function
+
+    Private Function SignProfile(context As ContextAsync(Of IHierarchyItemAsync), profile As String) As Byte()
+        ' Here you will sign your profile with SSL certificate to avoid "Unsigned" warning on iOS and OS X.
+        ' For demo purposes we just return the profile content unmodified.
+        Return context.Engine.ContentEncoding.GetBytes(profile)
+    End Function
+End Class
+]]></code>
+    </example><example>
+      <para>The code below is part of 'CardDAVServer.SqlStorage.AspNet' C# &amp; VB samples provided with the SDK.</para>
+      <code lang="C#"><![CDATA[internal class MyCustomGetHandler : IMethodHandlerAsync<IHierarchyItemAsync>
+{
+    public IMethodHandlerAsync<IHierarchyItemAsync> OriginalHandler { get; set; }
+
+    public bool EnableOutputBuffering
+    {
+        get { return false; }
+    }
+
+    public bool EnableOutputDebugLogging
+    {
+        get { return false; }
+    }
+
+    public bool EnableInputDebugLogging
+    {
+        get { return false; }
+    }
+
+    private readonly string htmlPath;
+
+    public MyCustomGetHandler(string contentRootPathFolder)
+    {
+        this.htmlPath = contentRootPathFolder;
+    }
+
+    public async Task ProcessRequestAsync(ContextAsync<IHierarchyItemAsync> context, IHierarchyItemAsync item)
+    {
+        string urlPath = context.Request.RawUrl.Substring(context.Request.ApplicationPath.TrimEnd('/').Length);
+
+        if (item is IItemCollectionAsync)
+        {
+            // In case of GET requests to WebDAV folders we serve a web page to display 
+            // any information about this server and how to use it.
+
+            // Remember to call EnsureBeforeResponseWasCalledAsync here if your context implementation
+            // makes some useful things in BeforeResponseAsync.
+            await context.EnsureBeforeResponseWasCalledAsync();
+
+            // Request to iOS/OS X CalDAV/CardDAV profile.
+            if (context.Request.RawUrl.EndsWith("?connect"))
+            {
+                await WriteProfileAsync(context, item, htmlPath);
+                return;
+            }
+            IHttpAsyncHandler page = (IHttpAsyncHandler)System.Web.Compilation.BuildManager.CreateInstanceFromVirtualPath(
+                "~/MyCustomHandlerPage.aspx", typeof(MyCustomHandlerPage));
+
+            if(Type.GetType("Mono.Runtime") != null)
+            {
+                page.ProcessRequest(HttpContext.Current);
+            }
+            else
+            {
+                // Here we call BeginProcessRequest instead of ProcessRequest to start an async page execution and be able to call RegisterAsyncTask if required. 
+                // To call APM method (Begin/End) from TAP method (Task/async/await) the Task.FromAsync must be used.
+                await Task.Factory.FromAsync(page.BeginProcessRequest, page.EndProcessRequest, HttpContext.Current, null);
+            }
+        }
+        else
+        {
+            await OriginalHandler.ProcessRequestAsync(context, item);
+        }
+    }
+
+    public bool AppliesTo(IHierarchyItemAsync item)
+    {
+        return item is IFolderAsync || OriginalHandler.AppliesTo(item);
+    }
+
+    private async Task WriteProfileAsync(ContextAsync<IHierarchyItemAsync> context, IHierarchyItemBaseAsync item, string htmlPath)
+    {
+        string mobileconfigFileName = null;
+        string decription = null;
+        if (item is IAddressbookFolderAsync)
+        {
+            mobileconfigFileName = "CardDAV.AppleProfileTemplete.mobileconfig";
+            decription = (item as IAddressbookFolderAsync).AddressbookDescription;
+        }
+
+        decription = !string.IsNullOrEmpty(decription) ? decription : item.Name;
+
+        string templateContent = null;
+        using (TextReader reader = new StreamReader(Path.Combine(htmlPath, mobileconfigFileName)))
+        {
+            templateContent = await reader.ReadToEndAsync();
+        }
+
+        Uri url = new Uri(context.Request.UrlPrefix);
+
+        string payloadUUID = item.Path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).Last(); // PayloadUUID
+
+        string profile = string.Format(templateContent
+            , url.Host // host name
+            , item.Path // CalDAV / CardDAV Principal URL. Here we can return (await (item as ICurrentUserPrincipalAsync).GetCurrentUserPrincipalAsync()).Path if needed.
+            , (context as DavContext).Identity.Name // user name
+            , url.Port // port                
+            , (url.Scheme == "https").ToString().ToLower() // SSL
+            , decription // CardDAV / CardDAV Account Description
+            , Assembly.GetAssembly(this.GetType()).GetName().Version.ToString()
+            , Assembly.GetAssembly(typeof(DavEngineAsync)).GetName().Version.ToString()
+            , payloadUUID
+            );
+
+        byte[] profileBytes = SignProfile(context, profile);
+
+        context.Response.ContentType = "application/x-apple-aspen-config";
+        context.Response.AddHeader("Content-Disposition", "attachment; filename=profile.mobileconfig");
+        context.Response.ContentLength = profileBytes.Length;
+        await context.Response.OutputStream.WriteAsync(profileBytes, 0, profileBytes.Length);
+    }
+
+    private byte[] SignProfile(ContextAsync<IHierarchyItemAsync> context, string profile)
+    {
+        // Here you will sign your profile with SSL certificate to avoid "Unsigned" warning on iOS and OS X.
+        // For demo purposes we just return the profile content unmodified.
+        return context.Engine.ContentEncoding.GetBytes(profile);
+    }
+}
+]]></code>
+      <code lang="VB"><![CDATA[Friend Class MyCustomGetHandler
+    Implements IMethodHandlerAsync(Of IHierarchyItemAsync)
+
+    Public Property OriginalHandler As IMethodHandlerAsync(Of IHierarchyItemAsync)
+
+    Public ReadOnly Property EnableOutputBuffering As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableOutputBuffering
+        Get
+            Return False
+        End Get
+    End Property
+
+    Public ReadOnly Property EnableOutputDebugLogging As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableOutputDebugLogging
+        Get
+            Return False
+        End Get
+    End Property
+
+    Public ReadOnly Property EnableInputDebugLogging As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).EnableInputDebugLogging
+        Get
+            Return False
+        End Get
+    End Property
+
+    Private ReadOnly htmlPath As String
+
+    Public Sub New(contentRootPathFolder As String)
+        Me.htmlPath = contentRootPathFolder
+    End Sub
+
+    Public Async Function ProcessRequestAsync(context As ContextAsync(Of IHierarchyItemAsync), item As IHierarchyItemAsync) As Task Implements IMethodHandlerAsync(Of IHierarchyItemAsync).ProcessRequestAsync
+        Dim urlPath As String = context.Request.RawUrl.Substring(context.Request.ApplicationPath.TrimEnd("/"c).Length)
+        If TypeOf item Is IItemCollectionAsync Then
+            ' In case of GET requests to WebDAV folders we serve a web page to display 
+            ' any information about this server and how to use it.
+            ' Remember to call EnsureBeforeResponseWasCalledAsync here if your context implementation
+            ' makes some useful things in BeforeResponseAsync.
+            Await context.EnsureBeforeResponseWasCalledAsync()
+            ' Request to iOS/OS X CalDAV/CardDAV profile.
+            If context.Request.RawUrl.EndsWith("?connect") Then
+                Await WriteProfileAsync(context, item, htmlPath)
+                Return
+            End If
+
+            Dim page As IHttpAsyncHandler = CType(System.Web.Compilation.BuildManager.CreateInstanceFromVirtualPath("~/MyCustomHandlerPage.aspx", GetType(MyCustomHandlerPage)), IHttpAsyncHandler)
+            If Type.GetType("Mono.Runtime") IsNot Nothing Then
+                page.ProcessRequest(HttpContext.Current)
+            Else
+                ' Here we call BeginProcessRequest instead of ProcessRequest to start an async page execution and be able to call RegisterAsyncTask if required. 
+                ' To call APM method (Begin/End) from TAP method (Task/async/await) the Task.FromAsync must be used.
+                Await Task.Factory.FromAsync(AddressOf page.BeginProcessRequest, AddressOf page.EndProcessRequest, HttpContext.Current, Nothing)
+            End If
+        Else
+            Await OriginalHandler.ProcessRequestAsync(context, item)
+        End If
+    End Function
+
+    Public Function AppliesTo(item As IHierarchyItemAsync) As Boolean Implements IMethodHandlerAsync(Of IHierarchyItemAsync).AppliesTo
+        Return TypeOf item Is IFolderAsync OrElse OriginalHandler.AppliesTo(item)
+    End Function
+
+    Private Async Function WriteProfileAsync(context As ContextAsync(Of IHierarchyItemAsync), item As IHierarchyItemBaseAsync, htmlPath As String) As Task
+        Dim mobileconfigFileName As String = Nothing
+        Dim decription As String = Nothing
+        If TypeOf item Is IAddressbookFolderAsync Then
+            mobileconfigFileName = "CardDAV.AppleProfileTemplete.mobileconfig"
+            decription = TryCast(item, IAddressbookFolderAsync).AddressbookDescription
+        End If
+
+        decription = If(Not String.IsNullOrEmpty(decription), decription, item.Name)
+        Dim templateContent As String = Nothing
+        Using reader As TextReader = New StreamReader(Path.Combine(htmlPath, mobileconfigFileName))
+            templateContent = Await reader.ReadToEndAsync()
+        End Using
+
+        Dim url As Uri = New Uri(context.Request.UrlPrefix)
+        Dim payloadUUID As String = item.Path.Split({"/"c}, StringSplitOptions.RemoveEmptyEntries).Last()
+        Dim profile As String = String.Format(templateContent,
+                                             url.Host, ' host name
+                                             item.Path, ' CalDAV / CardDAV Principal URL. Here we can return (await (item as ICurrentUserPrincipalAsync).GetCurrentUserPrincipalAsync()).Path if needed.
+                                             TryCast(context, DavContext).Identity.Name, ' user name
+                                             url.Port, ' port                
+                                             (url.Scheme = "https").ToString().ToLower(), ' SSL
+                                             decription, ' CardDAV / CardDAV Account Description
+                                             Assembly.GetAssembly(Me.GetType()).GetName().Version.ToString(),
+                                             Assembly.GetAssembly(GetType(DavEngineAsync)).GetName().Version.ToString(),
+                                             payloadUUID
+                                             )
+        Dim profileBytes As Byte() = SignProfile(context, profile)
+        context.Response.ContentType = "application/x-apple-aspen-config"
+        context.Response.AddHeader("Content-Disposition", "attachment; filename=profile.mobileconfig")
+        context.Response.ContentLength = profileBytes.Length
+        Await context.Response.OutputStream.WriteAsync(profileBytes, 0, profileBytes.Length)
+    End Function
+
+    Private Function SignProfile(context As ContextAsync(Of IHierarchyItemAsync), profile As String) As Byte()
+        ' Here you will sign your profile with SSL certificate to avoid "Unsigned" warning on iOS and OS X.
+        ' For demo purposes we just return the profile content unmodified.
+        Return context.Engine.ContentEncoding.GetBytes(profile)
+    End Function
+End Class
+]]></code>
+    </example>
+            <typeparam name="THierarchyItemAsync">Type implements <see cref="T:ITHit.Server.IHierarchyItemBaseAsync" /></typeparam>
+        </member>
+        <member name="M:ITHit.Server.Extensibility.IMethodHandlerAsync`1.ProcessRequestAsync(ITHit.Server.ContextAsync{`0},`0)">
+            <summary>
+            Enables processing of HTTP Web requests by a custom handler.
+            </summary>
+            <param name="context">
+             Instance of your context class derived from <see cref="T:ITHit.Server.ContextAsync`1"/> class.
+            </param>
+            <param name="item">Hierarchy item returned from <see cref="M:ITHit.Server.ContextAsync`1.GetHierarchyItemAsync(System.String)"/> or 
+            <b>null</b>.
+            </param>
+            <returns>
+            .
+            </returns>
+            <remarks>The <see cref="M:ITHit.Server.Extensibility.IMethodHandlerAsync`1.ProcessRequestAsync(ITHit.Server.ContextAsync{`0},`0)"/> method is called by the engine during <see cref="M:ITHit.Server.EngineAsync`1.RunAsync(ITHit.Server.ContextAsync{`0})"/> 
+            call. The hierarchy item returned from <see cref="M:ITHit.Server.ContextAsync`1.GetHierarchyItemAsync(System.String)"/> is 
+            passed to this method.  If <see cref="M:ITHit.Server.ContextAsync`1.GetHierarchyItemAsync(System.String)"/> returns null the null is passed.
+            </remarks>
+        </member>
+        <member name="M:ITHit.Server.Extensibility.IMethodHandlerAsync`1.AppliesTo(`0)">
+            <summary>
+            Determines whether this method shall be enlisted in 'supported-method-set' for 
+            <paramref name="item"/>.
+            </summary>
+            <param name="item">Hierarchy item returned from <see cref="M:ITHit.Server.ContextAsync`1.GetHierarchyItemAsync(System.String)"/> or 
+            <b>null</b>.</param>
+            <returns>Boolean indicating whether this handler implementation can handle request for the item.</returns>
+        </member>
+        <member name="P:ITHit.Server.Extensibility.IMethodHandlerAsync`1.EnableOutputBuffering">
+            <summary>
+            Determines whether engine can buffer content to calculate content length.
+            </summary>
+            <returns>
+            Boolean indicating whether content shall be buffered to calculated content length.
+            Engine will look at this property only if <see cref="P:ITHit.Server.EngineAsync`1.CalculateContentLength"/> is true.
+            </returns>
+        </member>
+        <member name="P:ITHit.Server.Extensibility.IMethodHandlerAsync`1.EnableOutputDebugLogging">
+            <summary>
+            Determines whether output produces by this handler shall be logged if debug logging
+            is enabled.
+            </summary>
+            <returns>Boolean indicating whether output shall be logged in debug mode.</returns>
+        </member>
+        <member name="P:ITHit.Server.Extensibility.IMethodHandlerAsync`1.EnableInputDebugLogging">
+            <summary>
+            Determines whether input read by this handler shall be logged if debug logging is enabled.
+            </summary>
+            <returns>Boolean indicating whether input shall be logged in debug mode.</returns>
+        </member>
+        <member name="T:ITHit.Server.Extensibility.NamespaceDoc">
+            <summary>
+            Provides interfaces for extending the engine with support of different HTTP methods processing.
+            </summary>
+        </member>
+        <member name="T:ITHit.Server.IContentAsync">
+            <summary>
+            Base interface for items that have content.
+            </summary>
+        </member>
+        <member name="P:ITHit.Server.IContentAsync.ContentType">
+            <summary>
+            Gets the media type of the file.
+            </summary>
+            <remarks>
+            <para>
+            The mime-type provided by this property is returned in a Content-Type header with GET request.
+            </para>
+            <para>
+            When deciding which action to perform when downloading a file some client applications and web browsers 
+            (such as Internet Explorer) rely on file extension, while others (such as Firefox) rely on Content-Type
+            header returned by server. For identical behavior in all browsers and WebDAV clients your server must
+            return a correct mime-type with a requested file.
+            </para>
+            </remarks>
+            <value>The MIME type of the file.</value>
+            <example>
+      <para>The code below is part of 'WebDAVServer.FileSystemStorage.AspNet' C# &amp; VB samples provided with the SDK.</para>
+      <code lang="C#"><![CDATA[public string ContentType
+{
+    get { return MimeType.GetMimeType(fileSystemInfo.Extension) ?? "application/octet-stream"; }
+}
+]]></code>
+      <code lang="VB"><![CDATA[Public ReadOnly Property ContentType As String Implements IContentAsync.ContentType
+    Get
+        Return If(MimeType.GetMimeType(fileSystemInfo.Extension), "application/octet-stream")
+    End Get
+End Property
+
+]]></code>
+    </example>
+        </member>
+        <member name="P:ITHit.Server.IContentAsync.ContentLength">
+            <summary>
+            Gets the size of the file content in bytes.
+            </summary>
+            <remarks>
+            <para>A value of this property is used when listing folder content (in PROPFIND request) as well as when reading file content (in GET request and HEAD requests).</para>
+            <para>A value returned by this property must exacly match the ammount of bytes returned by <see chref="ReadAsync" /> method. Otherwise the file content will be truncated or the GET request will never finish writing output.</para>
+            </remarks>
+            <value>Length of the file content in bytes.</value>
+            <example>
+      <para>The code below is part of 'WebDAVServer.FileSystemStorage.AspNet' C# &amp; VB samples provided with the SDK.</para>
+      <code lang="C#"><![CDATA[public long ContentLength
+{
+    get { return fileInfo.Length; }
+}
+]]></code>
+      <code lang="VB"><![CDATA[Public ReadOnly Property ContentLength As Long Implements IContentAsync.ContentLength
+    Get
+        Return fileInfo.Length
+    End Get
+End Property
+
+]]></code>
+    </example>
+        </member>
+        <member name="M:ITHit.Server.IContentAsync.ReadAsync(System.IO.Stream,System.Int64,System.Int64)">
+            <summary>
+            Reads the file content from the repository and writes it to the specified stream.
+            </summary>
+            <param name="output">Output stream.</param>
+            <param name="startIndex">The zero-bazed byte offset in file content at which to begin copying bytes to
+            the output stream.</param>
+            <param name="count">The number of bytes to be written to the output stream.</param>
+            <returns> .</returns>
+            <exception cref="T:ITHit.WebDAV.Server.Acl.NeedPrivilegesException">The user doesn't have enough privileges.</exception>
+            <exception cref="T:ITHit.WebDAV.Server.DavException">In other cases.</exception>
+            <remarks>
+            <para>
+            By default ASP.NET buffers content on server side before sending output. You must turn off buffering to
+            eliminate keeping entire file content in memory before sending:
+            <code>
+            HttpContext.Current.Response.BufferOutput = false;
+            </code>
+            </para>
+            <para>
+            Client application can request only a part of a file specifying <b>Range</b> header. Download managers 
+            may use this header to download single file using several threads at a time.
+            </para>
+            </remarks>
+            <example>
+      <para>The code below is part of 'WebDAVServer.FileSystemStorage.AspNet' C# &amp; VB samples provided with the SDK.</para>
+      <code lang="C#"><![CDATA[public virtual async Task ReadAsync(Stream output, long startIndex, long count)
+{
+    //Set timeout to maximum value to be able to download large files.
+    HttpContext.Current.Server.ScriptTimeout = int.MaxValue;
+    if (ContainsDownloadParam(context.Request.RawUrl))
+    {
+        AddContentDisposition(Name);
+    }
+
+    byte[] buffer = new byte[bufSize];
+    using (FileStream fileStream = fileInfo.Open(FileMode.Open, FileAccess.Read, FileShare.Read))
+    {
+        fileStream.Seek(startIndex, SeekOrigin.Begin);
+        int bytesRead;
+        int toRead = (int)Math.Min(count, bufSize);
+        if (toRead <= 0)
+        {
+            return;
+        }
+
+        try
+        {
+            bytesRead = await fileStream.ReadAsync(buffer, 0, toRead);
+            while (bytesRead  > 0 && count > 0)
+            {
+                await output.WriteAsync(buffer, 0, bytesRead);
+                count -= bytesRead;
+                bytesRead = await fileStream.ReadAsync(buffer, 0, toRead);
+            }
+        }
+        catch (HttpException)
+        {
+            // The remote host closed the connection (for example Cancel or Pause pressed).
+        }
+    }
+}
+]]></code>
+      <code lang="VB"><![CDATA[Public Overridable Async Function ReadAsync(output As Stream, startIndex As Long, count As Long) As Task Implements IContentAsync.ReadAsync
+    'Set timeout to maximum value to be able to download large files.
+    HttpContext.Current.Server.ScriptTimeout = Integer.MaxValue
+    If ContainsDownloadParam(context.Request.RawUrl) Then
+        AddContentDisposition(Name)
+    End If
+
+    Dim buffer As Byte() = New Byte(1048575) {}
+    Using fileStream As FileStream = fileInfo.Open(FileMode.Open, FileAccess.Read, FileShare.Read)
+        fileStream.Seek(startIndex, SeekOrigin.Begin)
+        Dim bytesRead As Integer
+        Dim toRead As Integer = CInt(Math.Min(count, bufSize))
+        If toRead <= 0 Then
+            Return
+        End If
+
+        Try
+            bytesRead = Await fileStream.ReadAsync(buffer, 0, toRead)
+            While bytesRead > 0 AndAlso count > 0
+                Await output.WriteAsync(buffer, 0, bytesRead)
+                count -= bytesRead
+                bytesRead = Await fileStream.ReadAsync(buffer, 0, toRead)
+            End While
+        Catch __unusedHttpException1__ As HttpException
+            ' The remote host closed the connection (for example Cancel or Pause pressed).
+             End Try
+    End Using
+End Function
+
+]]></code>
+    </example>
+        </member>
+        <member name="M:ITHit.Server.IContentAsync.WriteAsync(System.IO.Stream,System.String,System.Int64,System.Int64)">
+            <summary>
+            Saves the content of the file from the specified stream to the storage repository.
+            </summary>
+            <param name="content">Stream to read the content of the file from.</param>
+            <param name="contentType">Indicates the media type of the file.</param>
+            <param name="startIndex">Start offset to which content shall be saved.</param>
+            <param name="totalFileSize">Entire length of the file. Is is not less then length of
+            <paramref name="content" /> stream.</param>
+            <returns>Boolean value indicating whether entire stream was written. This value is used by the engine to take
+            decision whether autocheckin shall be performed.</returns>
+            <exception cref="T:ITHit.WebDAV.Server.Class2.LockedException">The file was locked and client did not provide lock token.</exception>
+            <exception cref="T:ITHit.WebDAV.Server.Acl.NeedPrivilegesException">The user doesn't have enough privileges.</exception>
+            <exception cref="T:ITHit.WebDAV.Server.Quota.InsufficientStorageException">Quota limit is reached.</exception>
+            <exception cref="T:ITHit.WebDAV.Server.DavException">In other cases.</exception>
+            <remarks>
+            <para>IIS and ASP.NET does not support files upload larger than 2Gb. If you need to upload files larger
+            than 2Gb you must develop HttpListener-based server or implement resumable upload interfaces.</para>
+            <para>
+            If you are creating HttpHandler-based server you must specify the file 
+            maximum upload size in web.config of your web application. By default maximum 
+            upload size is set to 4096 KB (4 MB) by ASP.NET. This limit is used to 
+            prevent denial of service attacks caused by users posting large files to the 
+            server. To increase the upload limit add &lt;httpRuntime&gt; section to your web application web.config
+            file and specify the limit in kilobytes: 
+            </para>
+            <code lang="Xml">
+              <![CDATA[
+                <configuration>
+                   <system.web>
+                      ...
+                      <httpRuntime maxRequestLength="2097151" /> //2Gb
+                      ...
+                   </system.web>
+                </configuration>
+            ]]>
+            </code>
+            <para>
+            When client uploads file to IIS, ASP.NET first creates the file in a the temporary upload directory.
+            Only when the entire file is uploaded to server you can read its content from stream. By default ASP.NET
+            uploads files to <b>%FrameworkInstallLocation%\Temporary ASP.NET Files</b> folder.
+            You must make sure you have enough disk space to keep temporary files uploaded to your server.
+            To change this folder location add the following section to your web.config file:
+            <code lang="Xml">
+              <![CDATA[
+               <configuration>
+                   <system.web>
+                      ...
+                      <compilation tempDirectory="temporary files directory" />
+                      ...
+                   </system.web>
+               </configuration>
+              ]]>
+            </code>
+            To avoid temporary file creation and pass content directly to engine set the
+            <c>ResumableUpload.PutUploadProgressAndResumeModule</c>
+            module in your web.config file. Unlike IIS/ASP.NET, HttpListener-based server does not create any
+            temporary files when handling uploads.
+            </para>
+            </remarks>
+            <example>
+      <para>The code below is part of 'WebDAVServer.FileSystemStorage.AspNet' C# &amp; VB samples provided with the SDK.</para>
+      <code lang="C#"><![CDATA[public virtual async Task<bool> WriteAsync(Stream content, string contentType, long startIndex, long totalFileSize)
+{
+    await RequireHasTokenAsync();
+    //Set timeout to maximum value to be able to upload large files.
+    HttpContext.Current.Server.ScriptTimeout = int.MaxValue;
+    if (startIndex == 0 && fileInfo.Length > 0)
+    {
+        using (FileStream filestream = fileInfo.Open(FileMode.Truncate)) { }
+    }
+    await fileInfo.SetExtendedAttributeAsync("TotalContentLength", (object)totalFileSize);
+    await fileInfo.SetExtendedAttributeAsync("SerialNumber", ++this.serialNumber);
+
+    using (FileStream fileStream = fileInfo.Open(FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read))
+    {
+        if (fileStream.Length < startIndex)
+        {
+            throw new DavException("Previous piece of file was not uploaded.", DavStatus.PRECONDITION_FAILED);
+        }
+
+        if (!content.CanRead)
+        {
+            return true;
+        }
+
+        fileStream.Seek(startIndex, SeekOrigin.Begin);
+        byte[] buffer = new byte[bufSize];
+
+        int lastBytesRead;
+        try
+        {
+            lastBytesRead = await content.ReadAsync(buffer, 0, bufSize);
+            while (lastBytesRead > 0)
+            {
+                await fileStream.WriteAsync(buffer, 0, lastBytesRead);                        
+                lastBytesRead = await content.ReadAsync(buffer, 0, bufSize);
+            }
+        }
+        catch (HttpException)
+        {
+            // The remote host closed the connection (for example Cancel or Pause pressed).
+        }
+    }
+    await context.socketService.NotifyUpdatedAsync(Path);
+    return true;
+}
+]]></code>
+      <code lang="VB"><![CDATA[Public Overridable Async Function WriteAsync(content As Stream, contentType As String, startIndex As Long, totalFileSize As Long) As Task(Of Boolean) Implements IContentAsync.WriteAsync
+    Await RequireHasTokenAsync()
+    'Set timeout to maximum value to be able to upload large files.
+    HttpContext.Current.Server.ScriptTimeout = Integer.MaxValue
+    If startIndex = 0 AndAlso fileInfo.Length > 0 Then
+        Using filestream As FileStream = fileInfo.Open(FileMode.Truncate)
+             End Using
+    End If
+
+    Await fileInfo.SetExtendedAttributeAsync("TotalContentLength", CObj(totalFileSize))
+    Await fileInfo.SetExtendedAttributeAsync("SerialNumber", System.Threading.Interlocked.Increment(Me.serialNumber))
+    Using fileStream As FileStream = fileInfo.Open(FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read)
+        If fileStream.Length < startIndex Then
+            Throw New DavException("Previous piece of file was not uploaded.", DavStatus.PRECONDITION_FAILED)
+        End If
+
+        If Not content.CanRead Then
+            Return True
+        End If
+
+        fileStream.Seek(startIndex, SeekOrigin.Begin)
+        Dim buffer As Byte() = New Byte(1048575) {}
+        Dim lastBytesRead As Integer
+        Try
+            lastBytesRead = Await content.ReadAsync(buffer, 0, bufSize)
+            While lastBytesRead > 0
+                Await fileStream.WriteAsync(buffer, 0, lastBytesRead)
+                lastBytesRead = Await content.ReadAsync(buffer, 0, bufSize)
+            End While
+        Catch __unusedHttpException1__ As HttpException
+            ' The remote host closed the connection (for example Cancel or Pause pressed).
+             End Try
+    End Using
+
+    Await context.socketService.NotifyUpdatedAsync(Path)
+    Return True
+End Function
+
+]]></code>
+    </example>
+        </member>
+        <member name="P:ITHit.Server.IContentAsync.Etag">
+            <summary>
+            Gets entity tag - string that identifies current state of resource's content.
+            </summary>
+            <remarks>
+            <para>
+            This property shall return different value if content changes. Typically you will return either file content cheksum or hash or counter which increases with every modification.
+            Change ETag every time a file content is updated in <see cref="M:ITHit.Server.IContentAsync.WriteAsync(System.IO.Stream,System.String,System.Int64,System.Int64)" /> method, together with a modification date. Do NOT change ETag when locking/unlocking a file. 
+            </para>
+            <para>
+            Return <c>null</c> to indicate that server doesn't support ETags. Note that many client applications, including Microsoft Office, require ETag for correct functioning.
+            </para>        
+            <para>
+            More information about ETags could be found here: http://en.wikipedia.org/wiki/HTTP_ETag.
+            </para>
+            </remarks>
+            <example>
+      <para>The code below is part of 'WebDAVServer.FileSystemStorage.AspNet' C# &amp; VB samples provided with the SDK.</para>
+      <code lang="C#"><![CDATA[public string Etag
+{
+    get { return string.Format("{0}-{1}", Modified.ToBinary(), this.serialNumber); }
+}
+]]></code>
+      <code lang="VB"><![CDATA[Public ReadOnly Property Etag As String Implements IContentAsync.Etag
+    Get
+        Return String.Format("{0}-{1}", Modified.ToBinary(), Me.serialNumber)
+    End Get
+End Property
+
+]]></code>
+    </example>
+        </member>
+        <member name="T:ITHit.Server.IHierarchyItemBaseAsync">
+            <summary>
+            Represents one item (file, folder) in the repository.
+            </summary>
+        </member>
+        <member name="P:ITHit.Server.IHierarchyItemBaseAsync.Name">
+            <summary>
+            Gets the name of the item in repository.
+            </summary>
+            <example>
+      <para>The code below is part of 'WebDAVServer.FileSystemStorage.AspNet' C# &amp; VB samples provided with the SDK.</para>
+      <code lang="C#"><![CDATA[public string Name { get { return fileSystemInfo.Name; } }
+]]></code>
+      <code lang="VB"><![CDATA[Public ReadOnly Property Name As String Implements IHierarchyItemBaseAsync.Name
+    Get
+        Return fileSystemInfo.Name
+    End Get
+End Property
+
+]]></code>
+    </example>
+        </member>
+        <member name="P:ITHit.Server.IHierarchyItemBaseAsync.Path">
+            <summary>
+            Unique item path in the repository relative to storage root.
+            </summary>
+            <remarks>
+            <para>
+            The URL returned by this property is relative to storage root.
+            If your server root is located at http://example.webdavsystem.com:8080/myserver/ and the item URL is
+            http://example.webdavsystem.com:8080/myserver/myfolder/myitem.doc this property implementation must
+            return myfolder/myitem.doc. To calculate the entire item URL the engine will
+            call <see cref="P:ITHit.Server.RequestAsync.ApplicationPath" /> property and attach it to url returned by
+            <see cref="P:ITHit.Server.IHierarchyItemBaseAsync.Path" /> property.
+            </para>
+            <para>Examples:
+            <list type="bullet">
+            <item><description>File: myfolder/my%20doc.docx</description></item>
+            <item><description>Folder: myfolder/folder/</description></item>
+            <item><description>History item: myfolder/mydoc.docx?history</description></item>
+            <item><description>Version: myfolder/mydoc.docx?version=5</description></item>
+            </list>
+            </para>
+            </remarks>
+            <value><c>String</c> representing relative item path in the repository.</value>
+            <example>
+      <para>The code below is part of 'WebDAVServer.FileSystemStorage.AspNet' C# &amp; VB samples provided with the SDK.</para>
+      <code lang="C#"><![CDATA[public string Path { get; private set; }
+]]></code>
+      <code lang="VB"><![CDATA[Public Property Path As String Implements IHierarchyItemBaseAsync.Path
+
+]]></code>
+    </example>
+        </member>
+        <member name="P:ITHit.Server.IHierarchyItemBaseAsync.Modified">
+            <summary>
+            Gets the last modification date of the item in repository expressed as the coordinated universal time (UTC).
+            </summary>
+            <remarks>
+            Value of this property must change only when content of the item changes. It must not change when item is locked or
+            unlocked or properties modified. In particular Mac OS relies on such behavior.
+            </remarks>
+            <example>
+      <para>The code below is part of 'WebDAVServer.FileSystemStorage.AspNet' C# &amp; VB samples provided with the SDK.</para>
+      <code lang="C#"><![CDATA[public DateTime Modified { get { return fileSystemInfo.LastWriteTimeUtc; } }
+]]></code>
+      <code lang="VB"><![CDATA[Public ReadOnly Property Modified As DateTime Implements IHierarchyItemBaseAsync.Modified
+    Get
+        Return fileSystemInfo.LastWriteTimeUtc
+    End Get
+End Property
+
+]]></code>
+    </example>
+        </member>
+        <member name="P:ITHit.Server.IHierarchyItemBaseAsync.Created">
+            <summary>
+            Gets the creation date of the item in repository expressed as the coordinated universal time (UTC).
+            </summary>
+            <example>
+      <para>The code below is part of 'WebDAVServer.FileSystemStorage.AspNet' C# &amp; VB samples provided with the SDK.</para>
+      <code lang="C#"><![CDATA[public DateTime Created { get { return fileSystemInfo.CreationTimeUtc; } }
+]]></code>
+      <code lang="VB"><![CDATA[Public ReadOnly Property Created As DateTime Implements IHierarchyItemBaseAsync.Created
+    Get
+        Return fileSystemInfo.CreationTimeUtc
+    End Get
+End Property
+
+]]></code>
+    </example>
+        </member>
+        <member name="T:ITHit.Server.ILogger">
+            <summary>
+            Engine uses this interface to perform logging.
+            </summary>
+        </member>
+        <member name="M:ITHit.Server.ILogger.LogDebug(System.String)">
+            <summary>
+            Logs message in debug mode.
+            </summary>
+            <param name="message">Message to be logged.</param>
+        </member>
+        <member name="M:ITHit.Server.ILogger.LogError(System.String,System.Exception)">
+            <summary>
+            Logs message in error mode.
+            </summary>
+            <param name="message">Message to be logged.</param>
+            <param name="exception">Exception to be logged.</param>
+        </member>
+        <member name="P:ITHit.Server.ILogger.IsDebugEnabled">
+            <summary>
+            Determines whether debug mode is enabled.
+            </summary>
+        </member>
+        <member name="P:ITHit.Server.ILogger.LogFlags">
+            <summary>
+            Logging flags.
+            </summary>
+            <remarks>By default Engine does not log GET response body and PUT request body.</remarks>
+        </member>
+        <member name="T:ITHit.Server.LogFlagsEnum">
+            <summary>
+            Logging options.
+            </summary>
+        </member>
+        <member name="F:ITHit.Server.LogFlagsEnum.LogGetResponseBody">
+            <summary>
+            If this flag is set the GET response body will be logged.
+            </summary>
+            <remarks>
+            <param>
+            The body of the GET response may be very large and often not human readable. 
+            </param>
+            <param>
+            It make sense to enable GET body logging for CalDAV and CardDAV servers and disable in other cases.
+            </param>
+            </remarks>
+        </member>
+        <member name="F:ITHit.Server.LogFlagsEnum.LogPutRequestBody">
+            <summary>
+            If this flag is set the PUT request body will be logged.
+            </summary>
+            <remarks>
+            <param>
+            The body of the PUT request may be very large and often not human readable. 
+            </param>
+            <param>
+            It make sense to enable PUT body logging for CalDAV and CardDAV servers and disable in other cases.
+            </param>
+            </remarks>
+        </member>
+        <member name="T:ITHit.Server.NamespaceDoc">
+            <summary>
+            Contains classes and interfaces that are common for WebDAV and Google G Suite editing.
+            </summary>
+        </member>
+        <member name="T:ITHit.Server.RequestAsync">
+            <summary>
+            Represents an incoming HTTP request.
+            </summary>
+            <remarks>
+            <para>
+            Usually you do not have to implement this class if you host your server in ASP.NET Core, ASP.NET, OWIN or HttpListener.
+            The library provides ready to use context, request and response implementrations for each of the above environments.
+            </para>
+            <para>
+            You will derive your class from this class only if you need to host your server in any other environment
+            from listed above and than pass instance of your class into the <see cref="T:ITHit.Server.ContextAsync`1"/> constructor.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:ITHit.Server.RequestAsync.RawUrl">
+            <summary>
+            Gets information about the URL of the current request.
+            </summary>
+            <value>
+            Url, like /somefolder/?query
+            </value>
+        </member>
+        <member name="P:ITHit.Server.RequestAsync.UrlPrefix">
+            <summary>
+            Gets concatenated request scheme, host and port, like: http://www.ithit.com:8080
+            </summary>
+            <value>
+            Concatenated scheme, host and port.
+            </value>
+        </member>
+        <member name="P:ITHit.Server.RequestAsync.ApplicationPath">
+            <summary>
+            Gets virtual application root path on the server.
+            </summary>
+            <value>
+            The virtual path of the current application.
+            </value>
+        </member>
+        <member name="P:ITHit.Server.RequestAsync.HttpMethod">
+            <summary>
+            Gets the HTTP method specified by the client.
+            </summary>
+            <value>
+            A <c>String</c> that contains the method used in the request.
+            </value>
+        </member>
+        <member name="P:ITHit.Server.RequestAsync.Headers">
+            <summary>
+            Gets a collection of HTTP headers.
+            </summary>
+            <value>
+            A <c>NameValueCollection</c> of headers.
+            </value>
+        </member>
+        <member name="P:ITHit.Server.RequestAsync.ContentType">
+            <summary>
+            Gets the MIME content type of the incoming request. 
+            </summary>
+            <value>
+            A string representing the MIME content type of the incoming request, for example, "text/html". 
+            </value>
+        </member>
+        <member name="P:ITHit.Server.RequestAsync.ContentEncoding">
+            <summary>
+            Gets the character set of the entity-body.
+            </summary>
+            <value>
+            An <c>Encoding</c> object representing the client's character set.
+            </value>
+        </member>
+        <member name="P:ITHit.Server.RequestAsync.ContentLength">
+            <summary>
+            Specifies the length, in bytes, of content sent by the client.
+            </summary>
+            <value>
+            The length, in bytes, of content sent by the client.
+            </value>
+        </member>
+        <member name="P:ITHit.Server.RequestAsync.InputStream">
+            <summary>
+            Gets the contents of the incoming HTTP entity body.
+            </summary>
+            <value>
+            A <c>Stream</c> object representing the contents of the incoming HTTP content body.
+            </value>
+        </member>
+        <member name="P:ITHit.Server.RequestAsync.UserAgent">
+            <summary>
+            Gets the User-Agent header.
+            </summary>
+            <value>
+            A <c>string</c> representing User-Agent header.
+            </value>
+        </member>
+        <member name="T:ITHit.Server.ResponseAsync">
+            <summary>
+            Represents HTTP response.
+            </summary>
+            <remarks>
+            <para>
+            Usually you do not have to implement this class if you host your server in ASP.NET Core, ASP.NET, OWIN or HttpListener.
+            The library provides ready to use context, request and response implementrations for each of the ablove environments.
+            </para>
+            <para>
+            You will derive your class from this class only if you need to host your server in any other environment
+            from listed above and than pass instance of your class into the <see cref="T:ITHit.Server.ContextAsync`1"/> constructor.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:ITHit.Server.ResponseAsync.StatusCode">
+            <summary>
+            Gets or sets the HTTP status code of the output returned to the client.
+            </summary>
+            <value>
+            An Integer representing the status of the HTTP output returned to the client.
+            </value>
+        </member>
+        <member name="P:ITHit.Server.ResponseAsync.StatusDescription">
+            <summary>
+            Sets the HTTP status string of the output returned to the client.
+            </summary>
+            <value>
+            A string describing the status of the HTTP output returned to the client.
+            </value>
+        </member>
+        <member name="P:ITHit.Server.ResponseAsync.ContentType">
+            <summary>
+            Sets the HTTP MIME type of the output stream.
+            </summary>
+            <value>
+            The HTTP MIME type of the output stream.
+            </value>
+        </member>
+        <member name="P:ITHit.Server.ResponseAsync.ContentEncoding">
+            <summary>
+            Sets the HTTP character set of the output stream.
+            </summary>
+            <value>
+            A <c>Encoding</c> object containing information about the character set of the current response.
+            </value>
+        </member>
+        <member name="P:ITHit.Server.ResponseAsync.ContentLength">
+            <summary>
+            Sets the content length of the output stream.
+            </summary>
+            <value>
+            The value of the response's Content-Length header.
+            </value>
+        </member>
+        <member name="P:ITHit.Server.ResponseAsync.OutputStream">
+            <summary>
+            Enables binary output to the outgoing HTTP content body.
+            </summary>
+            <value>
+            An IO <see cref="T:System.IO.Stream"/> representing the raw contents of the outgoing HTTP content body.
+            </value>
+        </member>
+        <member name="M:ITHit.Server.ResponseAsync.AddHeader(System.String,System.String)">
+            <summary>
+            Adds the specified header and value to the HTTP headers for this response.
+            </summary>
+            <param name="name">
+            The name of the HTTP header to set.
+            </param>
+            <param name="value">
+            The value for the name header.
+            </param>
+        </member>
+        <member name="M:ITHit.Server.ResponseAsync.Clear">
+            <summary>
+            Clears all content output from the buffer stream.
+            </summary>
+        </member>
+        <member name="P:ITHit.Server.ResponseAsync.IsClientConnected">
+            <summary>
+            Gets a valus indicating whether client is still connected.
+            </summary>
+            <remarks>
+            Most probably this property will be refreshed only when some data fails to send to client.
+            </remarks>
+        </member>
+    </members>
+</doc>
